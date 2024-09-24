@@ -89,8 +89,12 @@ class WeatherService {
     const currentWeather = this.parseCurrentWeather(weatherData);
     const forecast = this.buildForecastArray(weatherData.list.slice(1, 6));
 
+    // Add the city name to the current weather object
     return {
-      currentWeather,
+      currentWeather: {
+        ...currentWeather,
+        city: city, // Explicitly adding the city name
+      },
       forecast,
     };
   }

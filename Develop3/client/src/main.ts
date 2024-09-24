@@ -129,7 +129,7 @@ const renderCurrentWeather = (currentWeather: {
   const temperatureF = temperature !== undefined ? celsiusToFahrenheit(temperature).toFixed(2) : 'N/A';
   console.log('Temperature (C):', temperature);
   console.log(`Converted Temperature (F): ${temperatureF}`);
-  
+
   tempEl.textContent = `Temp: ${temperatureF}°F`;
   windEl.textContent = `Wind: ${windSpeed !== undefined ? windSpeed : 'N/A'} MPH`;
   humidityEl.textContent = `Humidity: ${humidity !== undefined ? humidity : 'N/A'} %`;
