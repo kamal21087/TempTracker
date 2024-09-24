@@ -15,7 +15,22 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 // Serve static files from the client dist folder
-app.use(express.static(path.join(__dirname, '../../client/dist')));
+const clientDistPath = path.join(__dirname, '../../client/dist');
+console.log('Serving static files from:', clientDistPath);
+
+app.use(express.static(clientDistPath));
+
+app.get('*', (_req, res) => {
+  const indexPath = path.join(clientDistPath, 'index.html');
+  console.log('Serving index.html from:', indexPath);
+
+  res.sendFile(indexPath, (err) => {
+    if (err) {
+      console.error('Error sending index.html:', err);
+      res.status(500).send('Error loading the page.');
+    }
+  });
+});
 
 // Middleware for parsing JSON and urlencoded form data
 app.use(express.json());

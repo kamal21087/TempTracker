@@ -1,10 +1,10 @@
 import { Router } from 'express';
-const router = Router();
-
 import apiRoutes from './api/index.js';
 import htmlRoutes from './htmlRoutes.js';
 
-router.use('/api', apiRoutes);
-router.use('/', htmlRoutes);
+const router = Router();
+
+router.use('/api', apiRoutes);  // Handles all API routes.
+router.use('/', htmlRoutes);    // Handles HTML routes.
 
 export default router;

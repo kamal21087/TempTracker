@@ -1,5 +1,11 @@
 import { promises as fs } from 'fs';
 import { v4 as uuidv4 } from 'uuid';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Define __filename and __dirname for ES module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Define a City class with name and id properties
 class City {
@@ -13,7 +19,7 @@ class City {
 }
 
 class HistoryService {
-  private filePath = './path/to/searchHistory.json'; // Adjust the path to your JSON file
+  private filePath = path.join(__dirname, '../../db/db.json'); // Adjusted path to the correct location
 
   // Read method to read from the searchHistory.json file
   private async read(): Promise<City[]> {

@@ -53,7 +53,7 @@ class Weather {
 
 // Complete the WeatherService class
 class WeatherService {
-  private baseURL = process.env.API_BASE_URL || ''; // Use the base URL from .env
+  //private baseURL = process.env.API_BASE_URL || ''; // Use the base URL from .env
   private apiKey = process.env.API_KEY || ''; // Use the API key from .env
 
   // Fetch location data by city name
@@ -68,14 +68,16 @@ class WeatherService {
 
   // Fetch weather data using coordinates
   private async fetchWeatherData(coordinates: Coordinates): Promise<WeatherResponse> {
-    const response = await axios.get<WeatherResponse>(this.baseURL, {
-      params: {
-        lat: coordinates.lat,
-        lon: coordinates.lon,
-        appid: this.apiKey,
-        units: 'metric',
-      },
-    });
+    const response = await axios.get<WeatherResponse>(
+      `https://api.openweathermap.org/data/2.5/forecast`, {
+        params: {
+          lat: coordinates.lat,
+          lon: coordinates.lon,
+          appid: this.apiKey,
+          units: 'metric',
+        },
+      }
+    );
     return response.data;
   }
 
