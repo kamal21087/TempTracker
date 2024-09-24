@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "npx tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "vite"
   },
   "devDependencies": {
     "typescript": "^5.4.5",

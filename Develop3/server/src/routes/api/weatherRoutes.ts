@@ -1,8 +1,6 @@
 import { Router } from 'express';
-import fs from 'fs/promises';
-import { v4 as uuidv4 } from 'uuid';
-import WeatherService from '../../service/weatherService'; // Ensure the path is correct
-import HistoryService from '../../service/historyService'; // Ensure the path is correct
+import WeatherService from '../../service/weatherService.js';
+import HistoryService from '../../service/historyService.js';
 
 const router = Router();
 
@@ -21,14 +19,14 @@ router.post('/', async (req, res) => {
     // Save city to search history
     await HistoryService.addCity(city);
 
-    res.json(weatherData);
+    return res.json(weatherData);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to retrieve weather data' });
+    return res.status(500).json({ error: 'Failed to retrieve weather data' });
   }
 });
 
 // GET: Retrieve search history
-router.get('/history', async (req, res) => {
+router.get('/history', async (_req, res) => {
   try {
     const history = await HistoryService.getCities();
     res.json(history);
