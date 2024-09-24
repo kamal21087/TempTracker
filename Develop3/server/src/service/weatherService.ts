@@ -2,19 +2,17 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Define an interface for the Coordinates object
+// Define interfaces
 interface Coordinates {
   lat: number;
   lon: number;
 }
 
-// Define an interface for the Location Response
 interface LocationResponse {
   lat: number;
   lon: number;
 }
 
-// Define an interface for the expected weather data structure
 interface WeatherResponse {
   list: {
     dt_txt: string;
@@ -32,7 +30,6 @@ interface WeatherResponse {
   }[];
 }
 
-// Define a class for the Weather object
 class Weather {
   date: string;
   temperature: number;
@@ -51,12 +48,9 @@ class Weather {
   }
 }
 
-// Complete the WeatherService class
 class WeatherService {
-  //private baseURL = process.env.API_BASE_URL || ''; // Use the base URL from .env
-  private apiKey = process.env.API_KEY || ''; // Use the API key from .env
+  private apiKey = process.env.API_KEY || '';
 
-  // Fetch location data by city name
   private async fetchLocationData(city: string): Promise<Coordinates> {
     const response = await axios.get<LocationResponse[]>(
       `http://api.openweathermap.org/geo/1.0/direct?q=${city}&limit=1&appid=${this.apiKey}`
@@ -66,7 +60,6 @@ class WeatherService {
     return { lat: data.lat, lon: data.lon };
   }
 
-  // Fetch weather data using coordinates
   private async fetchWeatherData(coordinates: Coordinates): Promise<WeatherResponse> {
     const response = await axios.get<WeatherResponse>(
       `https://api.openweathermap.org/data/2.5/forecast`, {
@@ -81,12 +74,10 @@ class WeatherService {
     return response.data;
   }
 
-  // Parse and format the current weather data
   private parseCurrentWeather(data: WeatherResponse) {
-    return new Weather(data.list[0]); // Assuming you want the first data point for current weather
+    return new Weather(data.list[0]);
   }
 
-  // Build the forecast array for the 5-day forecast
   private buildForecastArray(weatherData: WeatherResponse['list']): Weather[] {
     return weatherData.map((data) => new Weather(data));
   }
@@ -96,7 +87,7 @@ class WeatherService {
     const coordinates = await this.fetchLocationData(city);
     const weatherData = await this.fetchWeatherData(coordinates);
     const currentWeather = this.parseCurrentWeather(weatherData);
-    const forecast = this.buildForecastArray(weatherData.list.slice(1, 6)); // Adjusting to select the 5-day forecast data
+    const forecast = this.buildForecastArray(weatherData.list.slice(1, 6));
 
     return {
       currentWeather,

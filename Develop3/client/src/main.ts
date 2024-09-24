@@ -1,5 +1,6 @@
 import './styles/jass.css';
 
+
 // * All necessary DOM elements selected
 const searchForm: HTMLFormElement = document.getElementById(
   'search-form'
@@ -35,34 +36,53 @@ API Calls
 */
 
 const fetchWeather = async (cityName: string) => {
-  const response = await fetch('/api/weather/', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ city: cityName }),
+  try {
+    const response = await fetch('/api/weather/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ city: cityName }),
+    });
 
-  });
+    const weatherData = await response.json();
+    console.log('weatherData:', weatherData);
+    console.log('Current Weather Data:', weatherData.currentWeather); // Log full object
+    console.log('Temperature (C):', weatherData.currentWeather?.temperature);
 
-  const weatherData = await response.json();
-
-  console.log('weatherData: ', weatherData);
-
-  renderCurrentWeather(weatherData[0]);
-  renderForecast(weatherData.slice(1));
+    // Check if data is structured correctly
+    if (weatherData.currentWeather && weatherData.forecast) {
+      renderCurrentWeather({
+        city: weatherData.currentWeather.city, // Correctly pass the city name
+        date: weatherData.currentWeather.date,
+        icon: weatherData.currentWeather.icon,
+        iconDescription: weatherData.currentWeather.description,
+        temperature: weatherData.currentWeather.temperature,
+        windSpeed: weatherData.currentWeather.windSpeed,
+        humidity: weatherData.currentWeather.humidity,
+      });
+      renderForecast(weatherData.forecast);
+    } else {
+      console.error('Unexpected weather data format:', weatherData);
+    }
+  } catch (error) {
+    console.error('Error fetching weather data:', error);
+  }
 };
 
-const fetchSearchHistory = async () => {
-  const history = await fetch('/api/weather/history', {
+// Fetch the search history
+const fetchSearchHistory = async (): Promise<Response> => {
+  const response = await fetch('/api/weather/history', {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
     },
   });
-  return history;
+  return response;
 };
 
-const deleteCityFromHistory = async (id: string) => {
+// Delete a city from the search history
+const deleteCityFromHistory = async (id: string): Promise<void> => {
   await fetch(`/api/weather/history/${id}`, {
     method: 'DELETE',
     headers: {
@@ -77,26 +97,42 @@ Render Functions
 
 */
 
+// Helper function to convert Celsius to Fahrenheit
+const celsiusToFahrenheit = (celsius: number): number => (celsius * 9) / 5 + 32;
+
 const renderCurrentWeather = (currentWeather: {
   city: string;
   date: string;
   icon: string;
   iconDescription: string;
-  tempF: number;
+  temperature: number;
   windSpeed: number;
   humidity: number;
 }): void => {
-  const { city, date, icon, iconDescription, tempF, windSpeed, humidity } =
-    currentWeather;
+  if (!currentWeather) {
+    console.error('Current weather data is missing.');
+    return;
+  }
 
-  heading.textContent = `${city} (${date})`;
-  weatherIcon.setAttribute('src', `https://openweathermap.org/img/w/${icon}.png`);
-  weatherIcon.setAttribute('alt', iconDescription);
+  const { city, date, icon, iconDescription, temperature, windSpeed, humidity } = currentWeather;
+
+  // Check if the city is being correctly passed
+  console.log('Rendering weather for city:', city);
+
+  heading.textContent = `${city || 'Unknown City'} (${date || 'N/A'})`;
+  weatherIcon.setAttribute('src', icon ? `https://openweathermap.org/img/w/${icon}.png` : '');
+  weatherIcon.setAttribute('alt', iconDescription || 'No description');
   weatherIcon.setAttribute('class', 'weather-img');
   heading.append(weatherIcon);
-  tempEl.textContent = `Temp: ${tempF}°F`;
-  windEl.textContent = `Wind: ${windSpeed} MPH`;
-  humidityEl.textContent = `Humidity: ${humidity} %`;
+
+  // Convert Celsius to Fahrenheit if necessary
+  const temperatureF = temperature !== undefined ? celsiusToFahrenheit(temperature).toFixed(2) : 'N/A';
+  console.log('Temperature (C):', temperature);
+  console.log(`Converted Temperature (F): ${temperatureF}`);
+  
+  tempEl.textContent = `Temp: ${temperatureF}°F`;
+  windEl.textContent = `Wind: ${windSpeed !== undefined ? windSpeed : 'N/A'} MPH`;
+  humidityEl.textContent = `Humidity: ${humidity !== undefined ? humidity : 'N/A'} %`;
 
   if (todayContainer) {
     todayContainer.innerHTML = '';
@@ -108,13 +144,17 @@ const renderForecast = (forecast: Array<{
   date: string;
   icon: string;
   iconDescription: string;
-  tempF: number;
+  temperature: number;
   windSpeed: number;
   humidity: number;
 }>): void => {
+  if (!forecast || forecast.length === 0) {
+    console.error('No forecast data available.');
+    return;
+  }
+
   const headingCol = document.createElement('div');
   const heading = document.createElement('h4');
-
   headingCol.setAttribute('class', 'col-12');
   heading.textContent = '5-Day Forecast:';
   headingCol.append(heading);
@@ -122,28 +162,27 @@ const renderForecast = (forecast: Array<{
   if (forecastContainer) {
     forecastContainer.innerHTML = '';
     forecastContainer.append(headingCol);
+    forecast.forEach(renderForecastCard);
   }
-
-  forecast.forEach(renderForecastCard);
 };
 
 const renderForecastCard = (forecast: {
   date: string;
   icon: string;
   iconDescription: string;
-  tempF: number;
+  temperature: number;
   windSpeed: number;
   humidity: number;
 }): void => {
-  const { date, icon, iconDescription, tempF, windSpeed, humidity } = forecast;
+  const { date, icon, iconDescription, temperature, windSpeed, humidity } = forecast;
   const { col, cardTitle, weatherIcon, tempEl, windEl, humidityEl } = createForecastCard();
 
-  cardTitle.textContent = date;
-  weatherIcon.setAttribute('src', `https://openweathermap.org/img/w/${icon}.png`);
-  weatherIcon.setAttribute('alt', iconDescription);
-  tempEl.textContent = `Temp: ${tempF} °F`;
-  windEl.textContent = `Wind: ${windSpeed} MPH`;
-  humidityEl.textContent = `Humidity: ${humidity} %`;
+  cardTitle.textContent = date || 'N/A';
+  weatherIcon.setAttribute('src', icon ? `https://openweathermap.org/img/w/${icon}.png` : '');
+  weatherIcon.setAttribute('alt', iconDescription || 'No description');
+  tempEl.textContent = `Temp: ${temperature !== undefined ? celsiusToFahrenheit(temperature).toFixed(2) : 'N/A'} °F`;
+  windEl.textContent = `Wind: ${windSpeed !== undefined ? windSpeed : 'N/A'} MPH`;
+  humidityEl.textContent = `Humidity: ${humidity !== undefined ? humidity : 'N/A'} %`;
 
   if (forecastContainer) {
     forecastContainer.append(col);
@@ -151,20 +190,24 @@ const renderForecastCard = (forecast: {
 };
 
 const renderSearchHistory = async (searchHistory: Response): Promise<void> => {
-  const historyList = await searchHistory.json();
+  try {
+    const historyList = await searchHistory.json();
 
-  if (searchHistoryContainer) {
-    searchHistoryContainer.innerHTML = '';
+    if (searchHistoryContainer) {
+      searchHistoryContainer.innerHTML = '';
 
-    if (!historyList.length) {
-      searchHistoryContainer.innerHTML =
-        '<p class="text-center">No Previous Search History</p>';
+      if (!Array.isArray(historyList) || historyList.length === 0) {
+        searchHistoryContainer.innerHTML = '<p class="text-center">No Previous Search History</p>';
+        return;
+      }
+
+      historyList.reverse().forEach((city: any) => {
+        const historyItem = buildHistoryListItem(city);
+        searchHistoryContainer.append(historyItem);
+      });
     }
-
-    historyList.reverse().forEach((city: any) => {
-      const historyItem = buildHistoryListItem(city);
-      searchHistoryContainer.append(historyItem);
-    });
+  } catch (error) {
+    console.error('Failed to render search history:', error);
   }
 };
 
@@ -302,7 +345,8 @@ const handleDeleteHistoryClick = (event: any) => {
       console.log('Deleted city from history successfully');
       getAndRenderHistory();
     })
-    .catch((error) => console.error('Error deleting city from history:', error)); // Log any errors
+    .catch((error: any) => console.error('Error deleting city from history:', error));
+
 };
 
 /*
